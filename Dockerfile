@@ -33,8 +33,10 @@ RUN ARCH=$(uname -m) && \
     fi && \
     curl -L "https://github.com/tigrisdata/tigrisfs/releases/download/${TIGRIS_VERSION}/tigrisfs_${TIGRIS_VERSION#v}_linux_${TIGRIS_ARCH}.tar.gz" \
     -o /tmp/tigrisfs.tar.gz && \
-    tar -xzf /tmp/tigrisfs.tar.gz -C /usr/local/bin/ && \
-    rm /tmp/tigrisfs.tar.gz && \
+    mkdir -p /tmp/tigris && \
+    tar -xzf /tmp/tigrisfs.tar.gz -C /tmp/tigris && \
+    mv /tmp/tigris/tigrisfs /usr/local/bin/ || mv /tmp/tigris/*/tigrisfs /usr/local/bin/ && \
+    rm -rf /tmp/tigrisfs.tar.gz /tmp/tigris && \
     chmod +x /usr/local/bin/tigrisfs
 
 # 5. Config Injection (No Nextcloud source here!)
@@ -47,8 +49,9 @@ COPY config/overrides.config.php /tmp/overrides.config.php
 RUN chmod +x /entrypoint.sh /background-hydration.sh
 
 # 6. Environment Setup
-RUN mkdir -p /mnt/r2/data /var/log/supervisor /var/run /var/log && \
-    chown -R www-data:www-data /mnt/r2 /var/log/supervisor /var/www/html
+RUN mkdir -p /mnt/r2 /var/log/supervisor /var/run /var/log && \
+    chown -R www-data:www-data /mnt/r2 /var/log/supervisor /var/www/html && \
+    chmod 777 /var/run /var/log # Ensure supervisord can write PIDs/Logs as any user
 ENV NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION}
 
 # 7. Execution Command

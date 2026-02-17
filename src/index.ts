@@ -9,7 +9,7 @@
  */
 
 // Polyfill for Performance API if missing (needed for some Container dependencies)
-if (typeof globalThis.performance === 'undefined') {
+if (typeof performance === 'undefined') {
     (globalThis as any).performance = {
         now: () => Date.now()
     };

@@ -25,4 +25,5 @@ R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
 # 3. Start Process Manager
 echo "[Init] Starting Supervisor..."
+# Use full path and explicit config location
 exec /usr/bin/supervisord -n -c /etc/supervisord.conf

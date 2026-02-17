@@ -16,7 +16,7 @@ encode zstd gzip
 
 # Maintenance Mode Check
 @maintenance {
-not file /.hydration_complete
+    not file .hydration_complete
 }
 handle @maintenance {
 header Content-Type text/html
