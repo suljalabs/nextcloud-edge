@@ -1,0 +1,61 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "nextcloud-edge-platform",
+    "main": "src/index.ts",
+    "compatibility_date": "2026-02-11",
+    "compatibility_flags": [
+        "nodejs_compat"
+    ],
+    // 1. Container Definition
+    "containers": [
+        {
+            "class_name": "NextcloudContainer",
+            "image": "./Dockerfile",
+            "instance_type": {
+                "vcpu": 2,
+                "memory_mib": 6144, // 6GB RAM
+                "disk_mb": 12000 // 12GB Ephemeral disk
+            }
+        }
+    ],
+    // 2. Database Binding (Hyperdrive)
+    // Run `npx wrangler hyperdrive create ...` to get the ID
+    "hyperdrive": [
+        {
+            "binding": "DB_HYPERDRIVE",
+            "id": "108b8febceac4f21b7313a039270f34d"
+        }
+    ],
+    // 3. Object Storage Binding (Worker access)
+    "r2_buckets": [
+        {
+            "binding": "NEXTCLOUD_BUCKET",
+            "bucket_name": "nextcloud-data"
+        }
+    ],
+    // 4. Workers AI Binding
+    "ai": {
+        "binding": "AI"
+    },
+    // 5. Cron Trigger for Background Jobs
+    // Runs every 5 minutes to trigger cron.php
+    "triggers": {
+        "crons": [
+            "*/5 * * * *"
+        ]
+    },
+    // 6. Non-sensitive Configuration Variables
+    "vars": {
+        "R2_ACCOUNT_ID": "401e7bf72593b7e35a7049337b4920b4",
+        "R2_BUCKET_NAME": "nextcloud-data",
+        "APP_ENV": "production"
+    },
+    "migrations": [
+        {
+            "tag": "v1",
+            "new_sqlite_classes": [
+                "NextcloudContainer"
+            ]
+        }
+    ]
+}

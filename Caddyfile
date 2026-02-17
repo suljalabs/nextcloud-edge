@@ -1,0 +1,43 @@
+{
+    # Cloudflare handles TLS, so we disable auto-https to prevent Caddy from trying to obtain certs
+    auto_https off
+    # JSON logging integration for Cloudflare observability tools
+    log {
+        output stdout
+        format json
+    }
+}
+
+:8080 {
+    root * /var/www/html
+    
+    # Enable Zstandard and Gzip compression for performance
+    encode zstd gzip
+
+    # PHP-FPM Proxy Configuration
+    php_fastcgi 127.0.0.1:9000 {
+        # Front controller pattern for Nextcloud routing
+        env front_controller_active true
+        # Extended timeout for large file uploads handled via FUSE
+        dial_timeout 300s
+    }
+
+    # Security Hardening: Deny access to internal Nextcloud artifacts
+    @forbidden {
+        path /.htaccess
+        path /data/*
+        path /config/*
+        path /db_structure
+        path /.xml
+        path /README
+        path /3rdparty/*
+        path /lib/*
+        path /templates/*
+        path /occ
+        path /console.php
+    }
+    respond @forbidden 403
+
+    # Static file server for assets (CSS/JS/Images)
+    file_server
+}

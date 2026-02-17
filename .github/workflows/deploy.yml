@@ -1,0 +1,33 @@
+name: Deploy Container to Cloudflare
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: actions/setup-buildx-action@v3
+
+      - name: Docker Login to Cloudflare Registry
+        run: |
+          # Use the API Token to authenticate with Cloudflare Registry
+          echo "${{ secrets.CLOUDFLARE_API_TOKEN }}" | docker login registry.cloudflare.com -u "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" --password-stdin
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            registry.cloudflare.com/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/nextcloud-edge-platform-nextcloudcontainer:v1.0.0
+            registry.cloudflare.com/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/nextcloud-edge-platform-nextcloudcontainer:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
