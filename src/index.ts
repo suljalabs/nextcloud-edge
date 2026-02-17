@@ -22,7 +22,7 @@ interface Env {
     // Bindings
     DB_HYPERDRIVE: Hyperdrive;
     NEXTCLOUD_BUCKET: R2Bucket;
-    NEXTCLOUD_CONTAINER: DurableObjectNamespace<NextcloudContainer>;
+    NEXTCLOUD_APP: DurableObjectNamespace<NextcloudContainer>;
     AI: any; // Workers AI binding
 
     // Secrets (set via `wrangler secret put`)
@@ -94,11 +94,11 @@ export default {
         }
 
         // 2. Container Retrieval
-        if (!env.NEXTCLOUD_CONTAINER) {
-            return new Response(`Error: NEXTCLOUD_CONTAINER binding is missing. Keys: ${Object.keys(env).join(",")}`, { status: 500 });
+        if (!env.NEXTCLOUD_APP) {
+            return new Response(`Error: NEXTCLOUD_APP binding is missing. Keys: ${Object.keys(env).join(",")}`, { status: 500 });
         }
 
-        const container = getContainer(env.NEXTCLOUD_CONTAINER, tenantId);
+        const container = getContainer(env.NEXTCLOUD_APP, tenantId);
 
         // 3. Request Forwarding
         return await container.fetch(request);
@@ -119,7 +119,7 @@ export default {
         for (const tenantId of tenantsToService) {
             ctx.waitUntil((async () => {
                 try {
-                    const container = getContainer(env.NEXTCLOUD_CONTAINER, tenantId);
+                    const container = getContainer(env.NEXTCLOUD_APP, tenantId);
                     // Trigger cron.php via HTTP call to the container
                     // We construct a fake request to /cron.php
                     const response = await container.fetch(new Request("http://internal/cron.php"));
