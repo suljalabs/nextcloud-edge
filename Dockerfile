@@ -47,7 +47,8 @@ COPY config/overrides.config.php /tmp/overrides.config.php
 RUN chmod +x /entrypoint.sh /background-hydration.sh
 
 # 6. Environment Setup
-RUN mkdir -p /mnt/r2/data && chown -R www-data:www-data /mnt/r2 && chown www-data:www-data /var/www/html
+RUN mkdir -p /mnt/r2/data /var/log/supervisor /var/run /var/log && \
+    chown -R www-data:www-data /mnt/r2 /var/log/supervisor /var/www/html
 ENV NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION}
 
 # 7. Execution Command

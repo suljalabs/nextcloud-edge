@@ -8,6 +8,13 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
+// Polyfill for Performance API if missing (needed for some Container dependencies)
+if (typeof globalThis.performance === 'undefined') {
+    (globalThis as any).performance = {
+        now: () => Date.now()
+    };
+}
+
 import { Container, getContainer } from "@cloudflare/containers";
 
 // Interface defining the environment bindings
@@ -79,10 +86,7 @@ export default {
         const url = new URL(request.url);
 
         // 1. Tenant Logic
-        // Example: https://tenant-a.saas-app.com
         const hostname = url.hostname;
-        // Simple split for demo. In prod, use a more robust extraction (e.g. library).
-        // Assuming format: tenant-id.domain.com
         const parts = hostname.split('.');
         let tenantId = 'default';
         if (parts.length > 2) {
@@ -90,12 +94,13 @@ export default {
         }
 
         // 2. Container Retrieval
-        // We map the Tenant ID directly to a Container ID. 
-        // This creates a "Singleton" container for this tenant.
+        if (!env.NEXTCLOUD_CONTAINER) {
+            return new Response(`Error: NEXTCLOUD_CONTAINER binding is missing. Keys: ${Object.keys(env).join(",")}`, { status: 500 });
+        }
+
         const container = getContainer(env.NEXTCLOUD_CONTAINER, tenantId);
 
         // 3. Request Forwarding
-        // The request is proxied to the container's internal IP on port 8080.
         return await container.fetch(request);
     },
 

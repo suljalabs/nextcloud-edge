@@ -7,10 +7,20 @@
         "nodejs_compat"
     ],
     // 1. Container Definition
+    "durable_objects": {
+        "bindings": [
+            {
+                "name": "NEXTCLOUD_CONTAINER",
+                "class_name": "NextcloudContainer"
+            }
+        ]
+    },
+    // 1. Container Definition
     "containers": [
         {
+            "name": "nextcloud-edge-platform-nextcloudcontainer",
             "class_name": "NextcloudContainer",
-            "image": "./Dockerfile",
+            "image": "registry.cloudflare.com/401e7bf72593b7e35a7049337b4920b4/nextcloud-edge-platform-nextcloudcontainer:v1.0.0",
             "instance_type": {
                 "vcpu": 2,
                 "memory_mib": 6144, // 6GB RAM
