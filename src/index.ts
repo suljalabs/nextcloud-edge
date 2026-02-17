@@ -93,9 +93,13 @@ export default {
             tenantId = parts[0];
         }
 
-        // 2. Container Retrieval
+        // 2. Container Retrieval (with debug tenant override)
+        if (tenantId === 'debug') {
+            tenantId = `debug-${Date.now()}`; // Force a fresh DO instance
+        }
+
         if (!env.NEXTCLOUD_APP) {
-            return new Response(`Error: NEXTCLOUD_APP binding is missing. Keys: ${Object.keys(env).join(",")}`, { status: 500 });
+            return new Response(`Error: NEXTCLOUD_APP binding is missing.`, { status: 500 });
         }
 
         const container = getContainer(env.NEXTCLOUD_APP, tenantId);
@@ -107,11 +111,27 @@ export default {
             // Check for the specific "not running" error
             if (e.message && e.message.includes("consider calling start()")) {
                 console.log(`Starting container for tenant ${tenantId}...`);
-                await (container as any).start();
-                // Retry the fetch after start
-                return await container.fetch(request);
+                try {
+                    await (container as any).start();
+                    // Retry the fetch after start
+                    return await container.fetch(request);
+                } catch (startError: any) {
+                    return new Response(JSON.stringify({
+                        error: "Explicit start() failed",
+                        message: startError.message,
+                        stack: startError.stack,
+                        tenantId: tenantId
+                    }), { status: 500, headers: { "Content-Type": "application/json" } });
+                }
             }
-            throw e;
+
+            // Return detailed error for ANY other failure
+            return new Response(JSON.stringify({
+                error: "Container fetch failed",
+                message: e.message,
+                stack: e.stack,
+                tenantId: tenantId
+            }), { status: 500, headers: { "Content-Type": "application/json" } });
         }
     },
 
