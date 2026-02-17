@@ -100,8 +100,19 @@ export default {
 
         const container = getContainer(env.NEXTCLOUD_APP, tenantId);
 
-        // 3. Request Forwarding
-        return await container.fetch(request);
+        // 3. Request Forwarding with Autostart logic
+        try {
+            return await container.fetch(request);
+        } catch (e: any) {
+            // Check for the specific "not running" error
+            if (e.message && e.message.includes("consider calling start()")) {
+                console.log(`Starting container for tenant ${tenantId}...`);
+                await (container as any).start();
+                // Retry the fetch after start
+                return await container.fetch(request);
+            }
+            throw e;
+        }
     },
 
     // Cron Handler
