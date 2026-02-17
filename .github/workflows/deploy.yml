@@ -17,17 +17,11 @@ jobs:
       - name: 2. Configure Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 3. Registry Authentication
+      - name: 3. Build and Push with Wrangler
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          echo "${{ secrets.CLOUDFLARE_API_TOKEN }}" | docker login registry.cloudflare.com -u "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" --password-stdin
-
-      - name: 4. Build and Push Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            registry.cloudflare.com/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/nextcloud-edge-platform-nextcloudcontainer:v1.0.0
-            registry.cloudflare.com/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/nextcloud-edge-platform-nextcloudcontainer:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          npx wrangler containers build . \
+            --push \
+            --tag registry.cloudflare.com/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/nextcloud-edge-platform-nextcloudcontainer:v1.0.0
