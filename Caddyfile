@@ -5,9 +5,11 @@ auto_https off
 log {
 output stdout
 format json
+level DEBUG
 }
 }
 
+# Bind to both IPv4 and IPv6
 :8080 {
 root * /var/www/html
 

@@ -7,7 +7,7 @@ ARG TIGRIS_VERSION=v1.2.1
 
 # 1. System Dependencies (Minimal)
 RUN apk add --no-cache \
-    curl bash ca-certificates caddy supervisor fuse \
+    curl bash ca-certificates caddy supervisor fuse iproute2 \
     freetype-dev libjpeg-turbo-dev libpng-dev libzip-dev \
     icu-dev postgresql-dev gmp-dev imagemagick imagemagick-dev linux-headers
 
@@ -35,7 +35,8 @@ RUN ARCH=$(uname -m) && \
     -o /tmp/tigrisfs.tar.gz && \
     mkdir -p /tmp/tigris && \
     tar -xzf /tmp/tigrisfs.tar.gz -C /tmp/tigris && \
-    mv /tmp/tigris/tigrisfs /usr/local/bin/ || mv /tmp/tigris/*/tigrisfs /usr/local/bin/ && \
+    # Find the binary regardless of whether it's in a subdirectory or root of archive
+    find /tmp/tigris -name tigrisfs -type f -exec cp {} /usr/local/bin/ \; && \
     rm -rf /tmp/tigrisfs.tar.gz /tmp/tigris && \
     chmod +x /usr/local/bin/tigrisfs
 
