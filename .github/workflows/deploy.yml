@@ -20,16 +20,16 @@ jobs:
       - name: 3. Build and Push with Wrangler
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: "401e7bf72593b7e35a7049337b4920b4"
         run: |
           TAG="v-${{ github.sha }}"
           IMAGE_URI="registry.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/nextcloud-edge-platform-nextcloudcontainer:${TAG}"
           
-          # Build and push the new image
+          echo "Building image with tag: $TAG"
           npx wrangler containers build . --push --tag $IMAGE_URI
           
-          # Update wrangler.jsonc with the new image tag
+          echo "Updating wrangler.jsonc with image: $IMAGE_URI"
           sed -i "s|\"image\": \".*\"|\"image\": \"$IMAGE_URI\"|g" wrangler.jsonc
           
-          # Deploy the updated Worker + Container link
+          echo "Deploying Worker..."
           npx wrangler deploy
