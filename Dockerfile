@@ -45,9 +45,10 @@ WORKDIR /var/www/html
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY supervisord.conf /etc/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
+COPY probe-entrypoint.sh /probe-entrypoint.sh
 COPY background-hydration.sh /background-hydration.sh
 COPY config/overrides.config.php /tmp/overrides.config.php
-RUN chmod +x /entrypoint.sh /background-hydration.sh
+RUN chmod +x /entrypoint.sh /probe-entrypoint.sh /background-hydration.sh
 
 # 6. Environment Setup
 RUN mkdir -p /mnt/r2 /var/log/supervisor /var/run /var/log && \
@@ -55,5 +56,5 @@ RUN mkdir -p /mnt/r2 /var/log/supervisor /var/run /var/log && \
     chmod 777 /var/run /var/log # Ensure supervisord can write PIDs/Logs as any user
 ENV NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION}
 
-# 7. Execution Command
-CMD ["/entrypoint.sh"]
+# 7. Execution Command (PROBE MODE)
+CMD ["/probe-entrypoint.sh"]
