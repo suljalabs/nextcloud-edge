@@ -1,30 +1,28 @@
 #!/bin/bash
-set -e
-
-echo "[Init] Starting Cloudflare Nextcloud Container..."
+# entrypoint.sh - Robust startup script for Cloudflare Containers
+echo "[Init] Container boot started."
 
 # 1. Credentials Check
 if [ -z "$R2_ACCOUNT_ID" ] || [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
-    echo "[Error] R2 configuration missing. Check Worker environment variables."
-    exit 1
+    echo "[Error] R2 configuration missing. Available keys: $(env | cut -d= -f1 | xargs)"
 fi
 
-# 2. Start Background Services
-echo "[Init] Triggering background hydration and mounting..."
-/background-hydration.sh &
+# 2. Trigger Background Services
+echo "[Init] Starting background hydration..."
+/background-hydration.sh >/dev/stdout 2>&1 &
 
-# R2 FUSE Mounting via TigrisFS
+# R2 FUSE Mounting (Non-blocking)
+echo "[Init] Starting R2 mount..."
 R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-MOUNT_POINT="/mnt/r2"
 /usr/local/bin/tigrisfs \
     --endpoint "${R2_ENDPOINT}" \
     --bucket "${R2_BUCKET_NAME}" \
-    --mount-point "${MOUNT_POINT}" \
+    --mount-point "/mnt/r2" \
     --permissions 0770 \
-    --uid $(id -u www-data) \
-    --gid $(id -g www-data) \
-    --allow-other &
+    --uid 82 \
+    --gid 82 \
+    --allow-other >/dev/stdout 2>&1 &
 
-# 3. Start Supervisor Immediately ( удовлетворить Cloudflare Health Check )
-echo "[Init] Starting Process Manager..."
-exec /usr/bin/supervisord -c /etc/supervisord.conf
+# 3. Start Process Manager
+echo "[Init] Starting Supervisor..."
+exec /usr/bin/supervisord -n -c /etc/supervisord.conf

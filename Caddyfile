@@ -1,74 +1,60 @@
 {
-    # Cloudflare handles TLS, so we disable auto-https to prevent Caddy from trying to obtain certs
-    auto_https off
-    # JSON logging integration for Cloudflare observability tools
-    log {
-        output stdout
-        format json
-    }
+# Cloudflare handles TLS, so we disable auto-https to prevent Caddy from trying to obtain certs
+auto_https off
+# JSON logging integration for Cloudflare observability tools
+log {
+output stdout
+format json
+}
 }
 
 :8080 {
-    root * /var/www/html
-    
-    # Enable Zstandard and Gzip compression for performance
-    encode zstd gzip
+root * /var/www/html
 
-    # Maintenance Mode Check
-    @maintenance {
-        not file /.hydration_complete
-    }
-    handle @maintenance {
-        header Content-Type text/html
-        respond <<HTML
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Initializing Nextcloud...</title>
-            <style>
-                body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #0082c9; color: white; margin: 0; }
-                .container { text-align: center; }
-                .spinner { border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 4px solid white; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
-                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            </style>
-            <meta http-equiv="refresh" content="5">
-        </head>
-        <body>
-            <div class="container">
-                <div class="spinner"></div>
-                <h1>Initializing your Nextcloud instance</h1>
-                <p>We're downloading and configuring the environment. This takes about 1-2 minutes on first launch.</p>
-                <p><i>This page will refresh automatically.</i></p>
-            </div>
-        </body>
-        </html>
-HTML 200
-    }
+# Enable Zstandard and Gzip compression for performance
+encode zstd gzip
 
-    # PHP-FPM Proxy Configuration
-    php_fastcgi 127.0.0.1:9000 {
-        # Front controller pattern for Nextcloud routing
-        env front_controller_active true
-        # Extended timeout for large file uploads handled via FUSE
-        dial_timeout 300s
-    }
+# Maintenance Mode Check
+@maintenance {
+not file /.hydration_complete
+}
+handle @maintenance {
+header Content-Type text/html
+respond "<html>
 
-    # Security Hardening: Deny access to internal Nextcloud artifacts
-    @forbidden {
-        path /.htaccess
-        path /data/*
-        path /config/*
-        path /db_structure
-        path /.xml
-        path /README
-        path /3rdparty/*
-        path /lib/*
-        path /templates/*
-        path /occ
-        path /console.php
-    }
-    respond @forbidden 403
+<body>
+    <h1>Nextcloud Initializing</h1>
+    <p>Downloading files... Please refresh in 1 minute.</p>
+    <meta http-equiv='refresh' content='10'>
+</body>
 
-    # Static file server for assets (CSS/JS/Images)
-    file_server
+</html>" 200
+}
+
+# PHP-FPM Proxy Configuration
+php_fastcgi 127.0.0.1:9000 {
+# Front controller pattern for Nextcloud routing
+env front_controller_active true
+# Extended timeout for large file uploads handled via FUSE
+dial_timeout 300s
+}
+
+# Security Hardening: Deny access to internal Nextcloud artifacts
+@forbidden {
+path /.htaccess
+path /data/*
+path /config/*
+path /db_structure
+path /.xml
+path /README
+path /3rdparty/*
+path /lib/*
+path /templates/*
+path /occ
+path /console.php
+}
+respond @forbidden 403
+
+# Static file server for assets (CSS/JS/Images)
+file_server
 }
