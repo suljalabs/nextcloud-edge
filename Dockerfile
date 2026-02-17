@@ -42,8 +42,9 @@ WORKDIR /var/www/html
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY supervisord.conf /etc/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
+COPY background-hydration.sh /background-hydration.sh
 COPY config/overrides.config.php /tmp/overrides.config.php
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh /background-hydration.sh
 
 # 6. Environment Setup
 RUN mkdir -p /mnt/r2/data && chown -R www-data:www-data /mnt/r2 && chown www-data:www-data /var/www/html
