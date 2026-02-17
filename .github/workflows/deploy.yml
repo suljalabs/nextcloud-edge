@@ -1,4 +1,4 @@
-name: Deploy Container to Cloudflare
+name: Cloudflare Container Deployment V2
 
 on:
   push:
@@ -7,21 +7,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-push:
+  deploy-job:
+    name: Build and Push Slim Nextcloud
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: 1. Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+      - name: 2. Configure Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Docker Login to Cloudflare Registry
+      - name: 3. Registry Authentication
         run: |
-          # Use the API Token to authenticate with Cloudflare Registry
           echo "${{ secrets.CLOUDFLARE_API_TOKEN }}" | docker login registry.cloudflare.com -u "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" --password-stdin
 
-      - name: Build and Push
+      - name: 4. Build and Push Image
         uses: docker/build-push-action@v5
         with:
           context: .
